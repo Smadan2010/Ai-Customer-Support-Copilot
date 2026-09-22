@@ -89,7 +89,7 @@ class IntentClassifier:
             model_source = self.model_path
         else:
             model_source = "Madankumar2028/zends-intent-distilbert"
-            
+
         import torch
         from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
@@ -119,7 +119,10 @@ class IntentClassifier:
         self._device = torch.device("cpu")
         self._model.to(self._device)
         self._model.eval()
-        self._tokenizer = AutoTokenizer.from_pretrained(self.model_path, local_files_only=True)
+        self._tokenizer = AutoTokenizer.from_pretrained(
+            model_source,
+            local_files_only=False,
+        )
 
     def predict(self, text: str) -> dict[str, float | str]:
         self._load()
