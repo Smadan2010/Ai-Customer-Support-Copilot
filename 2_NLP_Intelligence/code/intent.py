@@ -85,8 +85,11 @@ class IntentClassifier:
     def _load(self) -> None:
         if self._tokenizer is not None and self._model is not None:
             return
-        if not self.model_path.exists():
-            raise FileNotFoundError(f"Fine-tuned intent model is missing: {self.model_path}")
+        if self.model_path.exists():
+            model_source = self.model_path
+        else:
+            model_source = "Madankumar2028/zends-intent-distilbert"
+            
         import torch
         from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
