@@ -93,12 +93,19 @@ class IntentClassifier:
         # Keep inference deterministic and fully materialized.  Explicitly opting
         # out of memory-saving dispatch prevents meta-device parameters from
         # reaching the Streamlit inference path.
+        
+        model_source = (
+            self.model_path
+            if Path(self.model_path).exists()
+            else "Madankumar2028/zends-intent-distilbert"
+        )
+
         self._model = AutoModelForSequenceClassification.from_pretrained(
-            self.model_path,
+            model_source,
             device_map=None,
             low_cpu_mem_usage=False,
             torch_dtype=torch.float32,
-            local_files_only=True,
+            local_files_only=False,
         )
         meta_parameters = [name for name, parameter in self._model.named_parameters() if parameter.is_meta]
         if meta_parameters:
