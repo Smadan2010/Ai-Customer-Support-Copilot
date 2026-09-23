@@ -15,7 +15,7 @@ for dependency_path in (ROOT / "2_NLP_Intelligence" / "code", ROOT / "3_RAG_Know
 from pipeline import NLPPipeline
 from retriever import ZendsRetriever
 
-from grounding import compose_response, deterministic_evidence_answer, expected_policy_category, is_grounded_answer, select_grounded_chunks
+from grounding import compose_response, deterministic_evidence_answer, expected_policy_category, is_grounded_answer, is_product_knowledge_query, select_grounded_chunks
 from llm import HuggingFaceInstructionLLM, InstructionLLM
 from prompting import build_response_prompt
 
@@ -60,13 +60,16 @@ class ZendsResponseEngine:
             cleaned_query,
             policy_category=expected_policy_category(cleaned_query, intent),
             support_intent=intent in {"Technical", "Complaint"},
+            product_query=is_product_knowledge_query(cleaned_query),
         )
         evidence = select_grounded_chunks(cleaned_query, intent, retrieved_context)
         prompt = build_response_prompt(customer_query=customer_query, analysis=analysis, chunks=evidence)
         generated = self.llm.generate(prompt)
-        answer = generated if is_grounded_answer(generated, evidence) else deterministic_evidence_answer(
-            customer_query, intent, evidence
-        )
+        # Structured facts and policies are rendered directly from retrieved
+        # evidence. The language model is only a fallback for unstructured text.
+        answer = deterministic_evidence_answer(customer_query, intent, evidence)
+        if answer is None and is_grounded_answer(generated, evidence):
+            answer = generated
         abstained = answer is None
         response = compose_response(
             sentiment=str(analysis["sentiment"]),

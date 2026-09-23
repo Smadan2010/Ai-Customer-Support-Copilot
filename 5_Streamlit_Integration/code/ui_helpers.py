@@ -15,8 +15,8 @@ GENERIC_QUERY_TERMS = {
 }
 STRONG_ZENDS_SCOPE_TERMS = {
     "bill", "billing", "broadband", "charged", "connectivity", "fiber", "gdpr", "internet", "invoice",
-    "iot", "mpls", "payment", "refund", "reimbursement", "roaming", "sla", "troubleshoot", "troubleshooting",
-    "wifi", "zendfiber",
+    "iot", "mpls", "payment", "postpaid", "prepaid", "refund", "reimbursement", "roaming", "sla",
+    "troubleshoot", "troubleshooting", "wifi", "zendfiber",
 }
 SERVICE_CONTEXT_TERMS = {"connection", "connectivity", "fiber", "internet", "network", "service", "support", "wifi"}
 OPERATIONAL_TERMS = {
@@ -65,6 +65,8 @@ def is_unrelated_to_retrieved_knowledge(query: str, result: dict[str, Any]) -> b
     if "zends" in raw_terms or any(term.startswith("zend") for term in raw_terms):
         return False
     if raw_terms & STRONG_ZENDS_SCOPE_TERMS or raw_terms & POLICY_TERMS:
+        return False
+    if {"fair", "usage"}.issubset(raw_terms):
         return False
 
     service_context = bool(raw_terms & SERVICE_CONTEXT_TERMS)

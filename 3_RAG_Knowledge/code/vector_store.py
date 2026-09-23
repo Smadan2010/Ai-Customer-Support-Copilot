@@ -29,6 +29,10 @@ class ZendsVectorStore:
     def count(self) -> int:
         return self.collection.count()
 
+    def all(self) -> dict:
+        """Return persisted source records for deterministic entity reranking."""
+        return self.collection.get(include=["documents", "metadatas", "embeddings"])
+
     def reset(self) -> None:
         """Recreate only this named collection for a deterministic source rebuild."""
         self.client.delete_collection(self.collection_name)

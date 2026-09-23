@@ -731,23 +731,9 @@ def render_model_analytics():
     config = {}
     sentiment = {}
 
-    try:
-        if metrics_path.exists():
-            metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
-    except Exception:
-        metrics = {}
-
-    try:
-        if config_path.exists():
-            config = json.loads(config_path.read_text(encoding="utf-8"))
-    except Exception:
-        config = {}
-
-    try:
-        if sentiment_path.exists():
-            sentiment = json.loads(sentiment_path.read_text(encoding="utf-8"))
-    except Exception:
-        sentiment = {}
+    metrics = _read_json(metrics_path)
+    config = _read_json(config_path)
+    sentiment = _read_json(sentiment_path)
 
     # Intent accuracy from test metrics
     accuracy = (
@@ -825,7 +811,7 @@ def render_model_analytics():
                     width="stretch",
                     height=300,
                 )
-            except Exception as e:
+            except (ImportError, OSError, TypeError, ValueError):
                 st.info("Confusion matrix data is available but could not be rendered.")
         else:
             # Fallback to metrics JSON if CSV doesn't exist
@@ -856,7 +842,7 @@ def render_model_analytics():
                         width="stretch",
                         height=300,
                     )
-                except Exception:
+                except (ImportError, OSError, TypeError, ValueError):
                     st.info("Confusion matrix data is available but could not be rendered.")
             else:
                 st.info("Confusion matrix data is not available.")
@@ -1123,7 +1109,7 @@ def main() -> None:
                 result = load_response_engine().respond(query)
                 result = apply_scope_guard(query, result)
             st.session_state.chat_history.append({"query": query, "result": result, "error": None})
-        except Exception as exc:  # noqa: BLE001 - keep the page stable; never let a backend failure break the UI shell
+        except (ImportError, OSError, RuntimeError, TypeError, ValueError) as exc:
             st.session_state.chat_history.append({"query": query, "result": None, "error": str(exc)})
         st.rerun()
 

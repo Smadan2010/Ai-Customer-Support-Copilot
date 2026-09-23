@@ -48,11 +48,20 @@ class StubRetriever:
         self.queries: list[str] = []
         self.policy_categories: list[str | None] = []
         self.support_intents: list[bool] = []
+        self.product_queries: list[bool] = []
 
-    def retrieve(self, query: str, *, policy_category: str | None = None, support_intent: bool = False) -> list[dict]:
+    def retrieve(
+        self,
+        query: str,
+        *,
+        policy_category: str | None = None,
+        support_intent: bool = False,
+        product_query: bool = False,
+    ) -> list[dict]:
         self.queries.append(query)
         self.policy_categories.append(policy_category)
         self.support_intents.append(support_intent)
+        self.product_queries.append(product_query)
         return self.chunks
 
 
@@ -278,6 +287,38 @@ def test_grounding_rejects_unsupported_numeric_claim_in_generated_draft() -> Non
     evidence = [chunk("Refund: Full refund within 7 days if usage is less than 10%.", policy="Refund")]
     assert is_grounded_answer("ZENDS offers a full refund within 7 days when usage is below 10%.", evidence)
     assert not is_grounded_answer("ZENDS offers a full refund within 30 days.", evidence)
+    assert not is_grounded_answer("ZENDS offers a full refund when usage is below 1%.", evidence)
+
+
+def test_grounding_rejects_refund_negation_contradiction() -> None:
+    evidence = [chunk("Refund: Cloud services are non-refundable after activation.", policy="Refund")]
+    assert not is_grounded_answer("Cloud services are refundable after activation.", evidence)
+
+
+@pytest.mark.parametrize(
+    ("draft", "accepted"),
+    [
+        ("Individual users have 98.5% SLA uptime.", True),
+        ("Individual users have 99.9% SLA uptime.", False),
+    ],
+)
+def test_engine_fallback_rejects_a_swapped_sla_tier(draft: str, accepted: bool) -> None:
+    # No policy metadata means there is no deterministic policy rendering;
+    # this exercises the LLM fallback and its relationship validator.
+    source = chunk(
+        "SLA: Individual users have 98.5% uptime, business users 99.5% uptime, "
+        "and enterprise users 99.9% uptime.",
+        chunk_id="sla-without-category",
+    )
+    engine = ZendsResponseEngine(
+        StubNLP(intent="Product Inquiry"), StubRetriever([source]), CaptureLLM(draft)
+    )
+    result = engine.respond("What is the individual SLA uptime?")
+    assert result["abstention"] is not accepted
+    if accepted:
+        assert result["recommended_response"] == draft
+    else:
+        assert "does not provide enough information" in result["recommended_response"]
 
 
 def test_invalid_query_is_rejected() -> None:

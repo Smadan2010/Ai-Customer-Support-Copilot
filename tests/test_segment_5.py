@@ -57,6 +57,7 @@ def test_streamlit_entrypoint_reuses_segment_four_without_duplicate_ai_logic() -
     assert "llm=StaticAcknowledgementLLM()" in source
     assert ".respond(query)" in source
     assert "except Exception" not in source
+    assert "apply_scope_guard(query, result)" in source
     assert "from pipeline import" not in source
     assert "from retriever import" not in source
     assert "C:\\Users\\" not in source
