@@ -30,12 +30,26 @@ class ZendsResponseEngine:
 
     @classmethod
     def from_project_assets(cls, *, llm: InstructionLLM | None = None) -> "ZendsResponseEngine":
+        database_path = ROOT / "3_RAG_Knowledge" / "vector_db"
+
+        retriever = ZendsRetriever(database_path)
+
+        if retriever.store.count() == 0:
+            from build import build_knowledge_base
+
+            build_knowledge_base(
+                ROOT / "docs" / "ZENDS Communications.pdf",
+                database_path,
+            )
+            retriever = ZendsRetriever(database_path)
+
         return cls(
-            NLPPipeline.from_model_directory(ROOT / "2_NLP_Intelligence" / "models" / "intent_distilbert"),
-            ZendsRetriever(ROOT / "3_RAG_Knowledge" / "vector_db"),
+            NLPPipeline.from_model_directory(
+                 ROOT / "2_NLP_Intelligence" / "models" / "intent_distilbert"
+            ),
+            retriever,
             llm or HuggingFaceInstructionLLM(),
         )
-
     def respond(self, customer_query: str) -> dict[str, Any]:
         if not isinstance(customer_query, str):
             raise TypeError("Customer query must be a string.")
