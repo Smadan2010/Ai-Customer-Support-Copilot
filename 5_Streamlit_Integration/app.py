@@ -28,7 +28,12 @@ from response_engine import ZendsResponseEngine
 from ui_helpers import OUT_OF_SCOPE_RESPONSE, apply_scope_guard, format_confidence, is_abstention, priority_style
 
 
-st.set_page_config(page_title="ZENDS Communications | AI Customer Support Copilot", page_icon="Z", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(
+    page_title="ZENDS Communications | AI Customer Support Copilot", 
+    page_icon="Z", 
+    layout="wide", 
+    initial_sidebar_state="locked"
+)
 
 
 @st.cache_resource(show_spinner="Loading secure support resources...")
