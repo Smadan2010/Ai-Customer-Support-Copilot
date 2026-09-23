@@ -979,9 +979,9 @@ def render_empty_state():
     )
 
     suggestions = [
-        "Why is my internet not working?",
-        "What is the refund policy?",
-        "Tell me about ZENDS cloud services.",
+        "What is the ZENDS refund policy?",
+        "What discounts does ZENDS offer?",
+        "What support tiers does ZENDS offer?"
     ]
 
     cols = st.columns(3)
